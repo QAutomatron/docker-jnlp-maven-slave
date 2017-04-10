@@ -22,14 +22,6 @@
 
 FROM jenkinsci/slave
 
-# Set the RU locale
-RUN locale-gen ru_RU.UTF-8
-ENV LANG ru_RU.UTF-8
-ENV LC_ALL ru_RU.UTF-8
-
-#Set RU TimeZone
-ENV TZ "Europe/Moscow"
-
 COPY jenkins-slave /usr/local/bin/jenkins-slave
 
 USER root
@@ -38,6 +30,14 @@ USER root
 
 ENV MAVEN_VERSION=3.3.9
 ENV MAVEN_HOME=/opt/mvn
+
+# Set the RU locale
+RUN locale-gen ru_RU.UTF-8
+ENV LANG ru_RU.UTF-8
+ENV LC_ALL ru_RU.UTF-8
+
+#Set RU TimeZone
+ENV TZ "Europe/Moscow"
 
 # change to tmp folder
 WORKDIR /tmp
