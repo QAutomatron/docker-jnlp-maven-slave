@@ -20,43 +20,40 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-FROM jenkinsci/slave
-
-COPY jenkins-slave /usr/local/bin/jenkins-slave
+FROM jenkinsci/jnlp-slave
 
 USER root
 
-# Install Maven
-
-ENV MAVEN_VERSION=3.3.9
-ENV MAVEN_HOME=/opt/mvn
-
 # Set the RU locale
-RUN locale-gen ru_RU.UTF-8
+RUN apt-get update && apt-get install -y locales \
+ && locale-gen ru_RU.UTF-8
+
 ENV LANG ru_RU.UTF-8
 ENV LC_ALL ru_RU.UTF-8
-
 #Set RU TimeZone
 ENV TZ "Europe/Moscow"
 
-# change to tmp folder
-WORKDIR /tmp
+USER jenkins
+
+# Install Maven
+ENV MAVEN_VERSION=3.3.9
+ENV MAVEN_HOME=/home/jenkins/apache-maven-${MAVEN_VERSION}
+WORKDIR /home/jenkins
 
 # Download and extract maven to opt folder
-RUN wget --no-check-certificate --no-cookies http://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-    && wget --no-check-certificate --no-cookies http://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz.md5 \
-    && echo "$(cat apache-maven-${MAVEN_VERSION}-bin.tar.gz.md5) apache-maven-${MAVEN_VERSION}-bin.tar.gz" | md5sum -c \
-    && tar -zvxf apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt/ \
-    && ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/mvn \
+RUN wget --no-check-certificate --no-cookies http://mirror.olnevhost.net/pub/apache/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && tar xvf apache-maven-${MAVEN_VERSION}-bin.tar.gz \
     && rm -f apache-maven-${MAVEN_VERSION}-bin.tar.gz \
     && rm -f apache-maven-${MAVEN_VERSION}-bin.tar.gz.md5
 
 # add executables to path
-RUN update-alternatives --install "/usr/bin/mvn" "mvn" "/opt/mvn/bin/mvn" 1 && \
-    update-alternatives --set "mvn" "/opt/mvn/bin/mvn"
+#RUN update-alternatives --install "/usr/bin/mvn" "mvn" "/opt/mvn/bin/mvn" 1 && \
+#    update-alternatives --set "mvn" "/opt/mvn/bin/mvn"
+	
+ENV M2_HOME=${MAVEN_HOME}
+ENV M2=$M2_HOME/bin 
+ENV PATH=$M2:$PATH
 
-USER jenkins
-
-WORKDIR /home/jenkins
+VOLUME /home/jenkins
 
 ENTRYPOINT ["jenkins-slave"]
